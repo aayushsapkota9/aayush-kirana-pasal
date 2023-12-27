@@ -1,4 +1,3 @@
-import { ArrayNotEmpty, IsArray } from 'class-validator';
 import { Product } from 'src/product/entities/product.entity';
 import { Supplier } from 'src/supplier/entities/supplier.entity';
 import {
@@ -22,8 +21,6 @@ export class SupplierBill {
   @ManyToOne(() => Supplier, (supplier) => supplier.bills)
   supplier: Supplier;
 
-  @IsArray()
-  @ArrayNotEmpty()
   @OneToMany(() => Product, (product) => product.bills)
-  product: Product[];
+  products: Product[];
 }

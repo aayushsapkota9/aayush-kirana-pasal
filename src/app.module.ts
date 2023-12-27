@@ -7,6 +7,8 @@ import { SupplierModule } from './supplier/supplier.module';
 import { CustomerModule } from './customer/customer.module';
 import { SupplierBillModule } from './supplier-bill/supplier-bill.module';
 import { CustomerBillModule } from './customer-bill/customer-bill.module';
+import { TransformInterceptor } from './interceptors/transform.interceptor';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -28,6 +30,12 @@ import { CustomerBillModule } from './customer-bill/customer-bill.module';
     CustomerBillModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TransformInterceptor,
+    },
+  ],
 })
 export class AppModule {}

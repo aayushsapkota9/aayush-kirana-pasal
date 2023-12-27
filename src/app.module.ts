@@ -2,7 +2,11 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { BillModule } from './bill/bill.module';
+import { ProductModule } from './product/product.module';
+import { SupplierModule } from './supplier/supplier.module';
+import { CustomerModule } from './customer/customer.module';
+import { SupplierBillModule } from './supplier-bill/supplier-bill.module';
+import { CustomerBillModule } from './customer-bill/customer-bill.module';
 
 @Module({
   imports: [
@@ -15,8 +19,13 @@ import { BillModule } from './bill/bill.module';
       database: 'aayush-kirana-pasal-db',
       entities: [],
       synchronize: true,
+      autoLoadEntities: true,
     }),
-    BillModule,
+    ProductModule,
+    SupplierModule,
+    CustomerModule,
+    SupplierBillModule,
+    CustomerBillModule,
   ],
   controllers: [AppController],
   providers: [AppService],

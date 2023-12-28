@@ -4,9 +4,15 @@ import {
   IsArray,
   ArrayNotEmpty,
   IsNumber,
+  IsOptional,
 } from 'class-validator';
+import { PrimaryGeneratedColumn } from 'typeorm';
 
 export class CreateProductDto {
+  @PrimaryGeneratedColumn()
+  @IsOptional()
+  id?: number;
+
   @IsString()
   @IsNotEmpty()
   name: string;
@@ -27,11 +33,12 @@ export class CreateProductDto {
   @IsNotEmpty()
   wholesalePrice: number;
 
-  @IsArray()
-  @ArrayNotEmpty()
-  suppliers: number[];
+  @IsNumber()
+  @IsOptional()
+  suppliers?: number[];
 
   @IsArray()
   @ArrayNotEmpty()
-  bills: number[];
+  @IsOptional()
+  bills?: number[];
 }

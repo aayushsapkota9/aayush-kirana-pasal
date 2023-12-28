@@ -8,6 +8,8 @@ import {
   Delete,
   UsePipes,
   ValidationPipe,
+  ParseIntPipe,
+  HttpStatus,
 } from '@nestjs/common';
 import { SupplierService } from './supplier.service';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
@@ -21,23 +23,31 @@ export class SupplierController {
 
   @Post()
   @UsePipes(new ValidationPipe({ transform: true }))
-  @ResponseMessage(SuccessMessage.CREATE, 'supplier')
+  @ResponseMessage(SuccessMessage.CREATE, 'Supplier')
   create(@Body() createSupplierDto: CreateSupplierDto) {
     return this.supplierService.create(createSupplierDto);
   }
 
   @Get()
+  @ResponseMessage(SuccessMessage.FETCH, 'Supplier')
   findAll() {
     return this.supplierService.findAll();
   }
 
-  @ResponseMessage(SuccessMessage.FETCH, 'supplier/{id}')
+  @ResponseMessage(SuccessMessage.FETCH, 'Supplier')
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.supplierService.findOne(+id);
+  findOne(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
+    return this.supplierService.findOne(id);
   }
 
   @Patch(':id')
+  @ResponseMessage(SuccessMessage.PATCH, 'Supplier')
   update(
     @Param('id') id: string,
     @Body() updateSupplierDto: UpdateSupplierDto,
@@ -46,6 +56,7 @@ export class SupplierController {
   }
 
   @Delete(':id')
+  @ResponseMessage(SuccessMessage.DELETE, 'Supplier')
   remove(@Param('id') id: string) {
     return this.supplierService.remove(+id);
   }

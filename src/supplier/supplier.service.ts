@@ -1,7 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
-import { Repository } from 'typeorm';
+import { Repository, EntityNotFoundError } from 'typeorm';
 import { Supplier } from './entities/supplier.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToClass } from 'class-transformer';
@@ -12,25 +17,51 @@ export class SupplierService {
     @InjectRepository(Supplier)
     private supplierRepository: Repository<Supplier>,
   ) {}
-  create(createSupplierDto: CreateSupplierDto) {
-    const tempSupplier = plainToClass(Supplier, createSupplierDto);
-    return this.supplierRepository.save(tempSupplier);
+
+  async create(createSupplierDto: CreateSupplierDto) {
+    try {
+      const payload = plainToClass(Supplier, createSupplierDto);
+      return await this.supplierRepository.save(payload);
+    } catch (error) {
+      throw error;
+    }
   }
 
-  findAll() {
-    return this.supplierRepository.find();
+  async findAll() {
+    try {
+      return await this.supplierRepository.find();
+    } catch (error) {
+      throw error;
+    }
   }
 
-  findOne(id: number) {
-    return this.supplierRepository.findOneBy({ id });
+  async findOne(id: number): Promise<Supplier> {
+    try {
+      const supplier = await this.supplierRepository.findOne({ where: { id } });
+      if (!supplier) {
+        throw new NotFoundException('Supplier not found.');
+      } else {
+        return supplier;
+      }
+    } catch (error) {
+      throw error;
+    }
   }
 
-  update(id: number, updateSupplierDto: UpdateSupplierDto) {
-    const tempSupplier = plainToClass(Supplier, updateSupplierDto);
-    return this.supplierRepository.update(id, tempSupplier);
+  async update(id: number, updateSupplierDto: UpdateSupplierDto) {
+    try {
+      const payload = plainToClass(Supplier, updateSupplierDto);
+      return await this.supplierRepository.update(id, payload);
+    } catch (error) {
+      throw error;
+    }
   }
 
-  remove(id: number) {
-    return this.supplierRepository.delete(id);
+  async remove(id: number) {
+    try {
+      return await this.supplierRepository.delete(id);
+    } catch (error) {
+      throw error;
+    }
   }
 }

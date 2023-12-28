@@ -27,11 +27,9 @@ export class CreateSupplierDto {
   @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => CreateSupplierBillDto)
-  bills: CreateSupplierBillDto[];
+  bills: number[];
 
   @IsArray()
   @IsOptional()
-  @ValidateNested({ each: true })
-  @Type(() => CreateProductDto)
-  products: CreateProductDto[];
+  products: number[];
 }

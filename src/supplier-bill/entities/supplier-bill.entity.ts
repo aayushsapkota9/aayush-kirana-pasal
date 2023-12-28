@@ -1,12 +1,14 @@
-import { Product } from 'src/product/entities/product.entity';
-import { Supplier } from 'src/supplier/entities/supplier.entity';
 import {
   Entity,
   Column,
   PrimaryGeneratedColumn,
   OneToMany,
   ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { Product } from 'src/product/entities/product.entity';
+import { Supplier } from 'src/supplier/entities/supplier.entity';
+
 @Entity()
 export class SupplierBill {
   @PrimaryGeneratedColumn()
@@ -18,9 +20,13 @@ export class SupplierBill {
   @Column()
   billDate: string;
 
+  // Many-to-One Relationship with Supplier
   @ManyToOne(() => Supplier, (supplier) => supplier.bills)
-  supplier: Supplier;
+  @JoinColumn({ name: 'supplier_id' })
+  supplier: number;
 
-  @OneToMany(() => Product, (product) => product.bills)
-  products: Product[];
+  // One-to-Many Relationship with Product
+  @OneToMany(() => Product, (product) => product.supplierBill)
+  @JoinColumn({ name: 'supplier_bill_id' })
+  products: number[];
 }

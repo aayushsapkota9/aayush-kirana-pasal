@@ -3,10 +3,10 @@ import {
   ArrayNotEmpty,
   IsString,
   ValidateNested,
+  IsNumber,
+  IsOptional,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import { CreateSupplierDto } from 'src/supplier/dto/create-supplier.dto';
-import { CreateProductDto } from 'src/product/dto/create-product.dto';
+import { Product } from 'src/product/entities/product.entity';
 
 export class CreateSupplierBillDto {
   @IsString()
@@ -15,13 +15,16 @@ export class CreateSupplierBillDto {
   @IsString()
   billDate: string;
 
-  @ValidateNested()
-  @Type(() => CreateSupplierDto)
-  supplier: CreateSupplierDto;
+  @IsNumber()
+  supplierId: number;
 
   @IsArray()
   @ArrayNotEmpty()
+  @IsOptional()
   @ValidateNested({ each: true })
-  @Type(() => CreateProductDto)
-  products: CreateProductDto[];
+  products: Product[];
+
+  @IsArray()
+  @IsOptional()
+  productIds: number[];
 }

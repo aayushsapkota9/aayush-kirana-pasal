@@ -1,7 +1,7 @@
 export enum SuccessMessage {
   CREATE = '%s created successfully.',
   FETCH = '%s fetched successfully',
-  UPDATE = '%s updated successfully',
+  PATCH = '%s updated successfully',
   DELETE = '%s deleted successfully',
   REMOVE = '%s removed successfully',
   REGISTER = '%s registered successfully',

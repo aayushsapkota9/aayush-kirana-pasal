@@ -6,7 +6,7 @@ import { ProductModule } from './product/product.module';
 import { SupplierModule } from './supplier/supplier.module';
 import { CustomerModule } from './customer/customer.module';
 import { SupplierBillModule } from './supplier-bill/supplier-bill.module';
-import { CustomerBillModule } from './customer-bill/customer-bill.module';
+// import { CustomerBillModule } from './customer-bill/customer-bill.module';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 
@@ -26,7 +26,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
     ProductModule,
     SupplierModule,
     CustomerModule,
-    // SupplierBillModule,
+    SupplierBillModule,
     // CustomerBillModule,
   ],
   controllers: [AppController],

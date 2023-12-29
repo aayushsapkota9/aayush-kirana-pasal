@@ -1,9 +1,13 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
-import { FindOneOptions, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { plainToClass } from 'class-transformer';
 import { UUID } from 'crypto';
 import { Supplier } from 'src/supplier/entities/supplier.entity';
@@ -18,35 +22,33 @@ export class ProductService {
   ) {}
   async create(createProductDto: CreateProductDto) {
     try {
-      // Convert DTO to Product instance
       const product = plainToClass(Product, createProductDto);
-      return await this.productRepository.save(product);
-    } catch (error) {
-      throw error;
-    }
-  }
-  async createProductWithSupplier(createProductDto: CreateProductDto) {
-    try {
-      const suppliersPromises = createProductDto.suppliers.map(async (item) => {
-        const [supplier] = await this.supplierRepository.find({
-          where: { id: item },
-        });
-        if (!supplier) {
-          throw new BadRequestException(`Supplier with ID ${item} not found`);
-        }
-        return supplier;
-      });
+      if (createProductDto.suppliers) {
+        const suppliersPromises = createProductDto.suppliers.map(
+          async (item) => {
+            const [supplier] = await this.supplierRepository.find({
+              where: { id: item },
+            });
+            if (!supplier) {
+              throw new BadRequestException(
+                `Supplier with ID ${item} not found`,
+              );
+            }
+            return supplier;
+          },
+        );
+        const suppliers = await Promise.all(suppliersPromises);
 
-      const suppliers = await Promise.all(suppliersPromises);
+        // Create a new product and associate it with the retrieved suppliers
+        product.suppliers = suppliers;
 
-      // Create a new product and associate it with the retrieved suppliers
-      const product = plainToClass(Product, createProductDto);
-      product.suppliers = suppliers;
+        // Save the product to the database
+        const savedProduct = await this.productRepository.save(product);
 
-      // Save the product to the database
-      const savedProduct = await this.productRepository.save(product);
-
-      return savedProduct;
+        return savedProduct;
+      } else {
+        return await this.productRepository.save(product);
+      }
     } catch (error) {
       throw error;
     }
@@ -60,9 +62,18 @@ export class ProductService {
     }
   }
 
-  async findOne(id: UUID) {
+  async findOne(id: string) {
     try {
-      return await this.productRepository.findOne({ where: { id } });
+      const product = await this.productRepository.findOne({
+        where: { id },
+        relations: ['suppliers'], // Specify the name of the relation property
+      });
+
+      if (!product) {
+        throw new NotFoundException(`Product with ID ${id} not found`);
+      }
+
+      return product;
     } catch (error) {
       throw error;
     }

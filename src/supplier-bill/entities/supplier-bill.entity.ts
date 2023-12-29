@@ -5,9 +5,12 @@ import {
   OneToMany,
   ManyToOne,
   JoinColumn,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { Product } from 'src/product/entities/product.entity';
 import { Supplier } from 'src/supplier/entities/supplier.entity';
+import { UUID } from 'crypto';
 
 @Entity()
 export class SupplierBill {
@@ -20,13 +23,10 @@ export class SupplierBill {
   @Column()
   billDate: string;
 
-  // Many-to-One Relationship with Supplier
-  // @ManyToOne(() => Supplier, (supplier) => supplier.bills)
-  @JoinColumn({ name: 'supplier_id' })
-  supplier: number;
+  @Column()
+  supplierId: UUID;
 
-  // One-to-Many Relationship with Product
-  // @OneToMany(() => Product, (product) => product.supplierBill)
-  @JoinColumn({ name: 'supplier_bill_id' })
-  products: number[];
+  @ManyToMany(() => Product, (product) => product.supplierBill)
+  @JoinTable()
+  products: Product[];
 }

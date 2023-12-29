@@ -18,7 +18,7 @@ export class ProductController {
 
   @Post()
   create(@Body() createProductDto: CreateProductDto) {
-    return this.productService.createProductWithSupplier(createProductDto);
+    return this.productService.create(createProductDto);
   }
 
   @Get()

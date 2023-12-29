@@ -5,7 +5,10 @@ import {
   ValidateNested,
   IsNumber,
   IsOptional,
+  isUUID,
+  IsUUID,
 } from 'class-validator';
+import { UUID } from 'crypto';
 import { Product } from 'src/product/entities/product.entity';
 
 export class CreateSupplierBillDto {
@@ -15,16 +18,13 @@ export class CreateSupplierBillDto {
   @IsString()
   billDate: string;
 
-  @IsNumber()
-  supplierId: number;
+  @IsString()
+  @IsUUID()
+  supplierId: UUID;
 
   @IsArray()
   @ArrayNotEmpty()
   @IsOptional()
   @ValidateNested({ each: true })
   products: Product[];
-
-  @IsArray()
-  @IsOptional()
-  productIds: number[];
 }

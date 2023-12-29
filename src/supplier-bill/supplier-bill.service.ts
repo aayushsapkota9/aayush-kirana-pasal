@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateSupplierBillDto } from './dto/create-supplier-bill.dto';
 import { UpdateSupplierBillDto } from './dto/update-supplier-bill.dto';
 import { Repository } from 'typeorm';
@@ -6,28 +10,39 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { plainToClass } from 'class-transformer';
 import { SupplierBill } from './entities/supplier-bill.entity';
 import { ProductService } from 'src/product/product.service';
+import { Supplier } from 'src/supplier/entities/supplier.entity';
+import { Product } from 'src/product/entities/product.entity';
 
 @Injectable()
 export class SupplierBillService {
   constructor(
     @InjectRepository(SupplierBill)
     private supplierBillRepository: Repository<SupplierBill>,
-    private readonly productService: ProductService,
+    @InjectRepository(Product)
+    private productRepository: Repository<Product>,
   ) {}
   async create(createSupplierBillDto: CreateSupplierBillDto) {
     try {
-      const payload = plainToClass(
-        CreateSupplierBillDto,
-        createSupplierBillDto,
-      );
-      const data = payload.products.map(async (item) => {
-        // const createdItem = await this.productService.create(item);
-        // return createdItem.id;
+      const supplierBill = plainToClass(Supplier, createSupplierBillDto);
+      const productsPromises = supplierBill.products.map(async (item) => {
+        if (item.id) {
+          const product = await this.productRepository.findOne({
+            where: { id: item.id },
+          });
+          if (!product) {
+            throw new BadRequestException(
+              `Supplier with ID ${item.id} not found`,
+            );
+          }
+          return product;
+        } else {
+          return await this.productRepository.save(item);
+        }
       });
-      const productIds = await Promise.all(data);
-      // payload.productIds = productIds;
-      const { products, ...others } = payload;
-      return await this.supplierBillRepository.save(others);
+      const suppliers = await Promise.all(productsPromises);
+
+      supplierBill.products = suppliers;
+      return await this.supplierBillRepository.save(supplierBill);
     } catch (error) {
       throw error;
     }
@@ -58,8 +73,8 @@ export class SupplierBillService {
 
   async update(id: number, updateSupplierBillDto: UpdateSupplierBillDto) {
     try {
-      const payload = plainToClass(SupplierBill, updateSupplierBillDto);
-      return await this.supplierBillRepository.update(id, payload);
+      const supplierBill = plainToClass(SupplierBill, updateSupplierBillDto);
+      return await this.supplierBillRepository.update(id, supplierBill);
     } catch (error) {
       throw error;
     }

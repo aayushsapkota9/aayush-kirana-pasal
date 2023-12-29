@@ -35,8 +35,7 @@ export class Product {
   @JoinTable()
   suppliers: Supplier[];
 
-  // // Product entity
-  // @ManyToMany(() => Supplier, (supplier) => supplier.products)
-  // @JoinTable()
-  // supplierBill: SupplierBill[];
+  @ManyToMany(() => Supplier, (supplier) => supplier.products)
+  @JoinTable()
+  supplierBill: SupplierBill[];
 }

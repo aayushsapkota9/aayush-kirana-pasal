@@ -37,7 +37,7 @@ export class CreateProductDto {
 
   @IsArray()
   @IsUUID(undefined, { each: true }) // Ensure each item in the array is a valid UUID
-  suppliers: string[];
+  suppliers: UUID[];
 
   // @IsArray()
   // @ArrayNotEmpty()

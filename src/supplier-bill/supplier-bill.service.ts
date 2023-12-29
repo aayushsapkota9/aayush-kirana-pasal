@@ -21,11 +21,11 @@ export class SupplierBillService {
         createSupplierBillDto,
       );
       const data = payload.products.map(async (item) => {
-        const createdItem = await this.productService.create(item);
-        return createdItem.id;
+        // const createdItem = await this.productService.create(item);
+        // return createdItem.id;
       });
       const productIds = await Promise.all(data);
-      payload.productIds = productIds;
+      // payload.productIds = productIds;
       const { products, ...others } = payload;
       return await this.supplierBillRepository.save(others);
     } catch (error) {
@@ -44,7 +44,7 @@ export class SupplierBillService {
   async findOne(id: number): Promise<SupplierBill> {
     try {
       const supplier = await this.supplierBillRepository.findOne({
-        where: { id },
+        // where: { id },
       });
       if (!supplier) {
         throw new NotFoundException('Supplier Bill not found.');

@@ -6,12 +6,13 @@ import {
   PrimaryGeneratedColumn,
   OneToMany,
   ManyToMany,
+  JoinTable,
 } from 'typeorm';
 
 @Entity()
 export class Supplier {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   name: string;
@@ -22,11 +23,12 @@ export class Supplier {
   @Column()
   phone: string;
 
-  // One supplier can have many bills
-  @OneToMany(() => SupplierBill, (supplierBill) => supplierBill.supplier)
-  bills: number[];
+  // // One supplier can have many bills
+  // @OneToMany(() => SupplierBill, (supplierBill) => supplierBill.supplier)
+  // bills: SupplierBill[];
 
   // One supplier can have many products
   @ManyToMany(() => Product, (product) => product.suppliers)
-  products: number[];
+  @JoinTable()
+  products: Product[];
 }

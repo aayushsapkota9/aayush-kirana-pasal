@@ -5,13 +5,15 @@ import {
   ArrayNotEmpty,
   IsNumber,
   IsOptional,
+  IsUUID,
 } from 'class-validator';
+import { UUID } from 'crypto';
 import { PrimaryGeneratedColumn } from 'typeorm';
 
 export class CreateProductDto {
   @PrimaryGeneratedColumn()
   @IsOptional()
-  id?: number;
+  id?: UUID;
 
   @IsString()
   @IsNotEmpty()
@@ -33,12 +35,12 @@ export class CreateProductDto {
   @IsNotEmpty()
   wholesalePrice: number;
 
-  @IsNumber()
-  @IsOptional()
-  suppliers?: number[];
-
   @IsArray()
-  @ArrayNotEmpty()
-  @IsOptional()
-  bills?: number[];
+  @IsUUID(undefined, { each: true }) // Ensure each item in the array is a valid UUID
+  suppliers: string[];
+
+  // @IsArray()
+  // @ArrayNotEmpty()
+  // @IsOptional()
+  // bills?: string[];
 }

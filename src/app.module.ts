@@ -26,8 +26,8 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
     ProductModule,
     SupplierModule,
     CustomerModule,
-    SupplierBillModule,
-    CustomerBillModule,
+    // SupplierBillModule,
+    // CustomerBillModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,6 +1,5 @@
 import { SupplierBill } from 'src/supplier-bill/entities/supplier-bill.entity';
 import { Supplier } from 'src/supplier/entities/supplier.entity';
-
 import {
   Entity,
   Column,
@@ -9,12 +8,13 @@ import {
   JoinTable,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 
 @Entity()
 export class Product {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   name: string;
@@ -33,13 +33,10 @@ export class Product {
 
   @ManyToMany(() => Supplier, (supplier) => supplier.products)
   @JoinTable()
-  suppliers: number[];
+  suppliers: Supplier[];
 
-  //Many Bills may come from many suppliers
-  @ManyToMany(() => SupplierBill, (supplierBill) => supplierBill.products)
-  bills: number[];
-  // Product entity
-  @ManyToOne(() => SupplierBill, (supplierBill) => supplierBill.products)
-  @JoinColumn({ name: 'supplier_bill_id' }) // Use the correct foreign key column name
-  supplierBill: number;
+  // // Product entity
+  // @ManyToMany(() => Supplier, (supplier) => supplier.products)
+  // @JoinTable()
+  // supplierBill: SupplierBill[];
 }

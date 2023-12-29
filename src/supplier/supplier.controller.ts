@@ -10,12 +10,14 @@ import {
   ValidationPipe,
   ParseIntPipe,
   HttpStatus,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { SupplierService } from './supplier.service';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
 import { ResponseMessage } from 'src/decorators/response.decorators';
 import { SuccessMessage } from 'src/interfaces/common.interface';
+import { UUID } from 'crypto';
 
 @Controller('supplier')
 export class SupplierController {
@@ -39,9 +41,9 @@ export class SupplierController {
   findOne(
     @Param(
       'id',
-      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
     )
-    id: number,
+    id: UUID,
   ) {
     return this.supplierService.findOne(id);
   }

@@ -10,6 +10,7 @@ import { Repository, EntityNotFoundError } from 'typeorm';
 import { Supplier } from './entities/supplier.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToClass } from 'class-transformer';
+import { UUID } from 'crypto';
 
 @Injectable()
 export class SupplierService {
@@ -35,7 +36,7 @@ export class SupplierService {
     }
   }
 
-  async findOne(id: number): Promise<Supplier> {
+  async findOne(id: UUID): Promise<Supplier> {
     try {
       const supplier = await this.supplierRepository.findOne({ where: { id } });
       if (!supplier) {

@@ -19,69 +19,100 @@ export class ProductService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
-    @InjectRepository(ProductPrice)
     private readonly supplierService: SupplierService,
   ) {}
   async create(createProductDto: CreateProductDto) {
     try {
-      // Check if the product with the given ID already exists
-      const existingProduct = await this.productRepository.findOne({
-        where: { id: createProductDto.id },
-        relations: ['suppliers', 'purchasePrice'], // Specify the name of the relation property
+      const product = plainToClass(Product, createProductDto);
+      const suppliersPromises = createProductDto.suppliers.map(async (item) => {
+        const supplier = await this.supplierService.findOne(item);
+        if (!supplier) {
+          throw new BadRequestException(`Supplier with ID ${item} not found`);
+        }
+        return supplier;
       });
+      const suppliers = await Promise.all(suppliersPromises);
 
-      if (existingProduct && createProductDto.id) {
-        // Product with the given ID exists, update the quantity and create new price
-        const newPrice = new ProductPrice();
-        newPrice.price = createProductDto.purchasePrice;
-        newPrice.timestamp = new Date();
+      // Create a new ProductPrice instance
+      const initialPrice = new ProductPrice();
+      initialPrice.price = createProductDto.purchasePrice;
+      initialPrice.timestamp = new Date();
+      // Set the purchasePrice array
+      product.purchasePrice = [initialPrice];
 
-        // Update the existing product quantity
-        const existingQuantity = Number(existingProduct.quantity);
+      // Create a new product and associate it with the retrieved suppliers
+      product.suppliers = suppliers;
 
-        // Perform the addition
-        existingProduct.quantity = existingQuantity + createProductDto.quantity;
-        // Add the new price entry to the existing purchasePrice array
-        existingProduct.purchasePrice = [
-          newPrice,
-          ...existingProduct.purchasePrice,
+      // Save the product to the database
+      const savedProduct = await this.productRepository.save(product);
+      return savedProduct;
+    } catch (error) {
+      // Handle any errors that occur during the process
+      throw error;
+    }
+  }
+  async createAndUpdate(id: string, createProductDto: UpdateProductDto) {
+    try {
+      // Fetch the existing product
+      const existingProduct = await this.productRepository.findOne({
+        where: { id },
+        relations: ['purchasePrice', 'suppliers'],
+      });
+      if (!existingProduct) {
+        throw new BadRequestException(`Product with ID ${id} not found`);
+      }
+      const suppliersPromises = createProductDto.suppliers.map(async (item) => {
+        const supplier = await this.supplierService.findOne(item);
+        if (!supplier) {
+          throw new BadRequestException(`Supplier with ID ${item} not found`);
+        }
+        return supplier;
+      });
+      const suppliers = await Promise.all(suppliersPromises);
+      existingProduct.suppliers = suppliers;
+
+      // Check if prices are different
+      const latestPrice =
+        existingProduct.purchasePrice?.[
+          existingProduct.purchasePrice.length - 1
         ];
 
-        // Save the updated product
+      if (
+        Number.parseInt(latestPrice.price as any) !=
+        createProductDto.purchasePrice
+      ) {
+        // Prices are different, create a new ProductPrice entry
+        const newPrice = new ProductPrice();
+        newPrice.price = Number(createProductDto.purchasePrice);
+        newPrice.timestamp = new Date();
+
+        // Update the existing product quantity and prices
+        existingProduct.quantity =
+          (Number(existingProduct.quantity) || 0) + createProductDto.quantity;
+
+        // Overwrite the purchasePrice array
+        existingProduct.purchasePrice = [
+          ...existingProduct.purchasePrice,
+          newPrice,
+        ];
+
+        existingProduct.wholesalePrice = createProductDto.wholesalePrice;
+        existingProduct.retailPrice = createProductDto.retailPrice;
+        existingProduct.name = createProductDto.name;
+        // Save the updated product and the new price entry
         await this.productRepository.save(existingProduct);
-        return existingProduct;
       } else {
-        // Product with the given ID doesn't exist, proceed with regular creation
-        const product = plainToClass(Product, createProductDto);
-        const suppliersPromises = createProductDto.suppliers.map(
-          async (item) => {
-            const supplier = await this.supplierService.findOne(item);
-            if (!supplier) {
-              throw new BadRequestException(
-                `Supplier with ID ${item} not found`,
-              );
-            }
-            return supplier;
-          },
-        );
-        const suppliers = await Promise.all(suppliersPromises);
+        // Prices are the same, update quantity
+        existingProduct.wholesalePrice = createProductDto.wholesalePrice;
+        existingProduct.retailPrice = createProductDto.retailPrice;
+        existingProduct.quantity =
+          (Number(existingProduct.quantity) || 0) + createProductDto.quantity;
+        // Save the updated product
 
-        // Create a new ProductPrice entry for the initial purchase
-        // Create a new ProductPrice instance
-        const initialPrice = new ProductPrice();
-        initialPrice.price = createProductDto.purchasePrice;
-        initialPrice.timestamp = new Date();
-
-        // Set the purchasePrice array
-        product.purchasePrice = [initialPrice];
-
-        // Create a new product and associate it with the retrieved suppliers
-        product.suppliers = suppliers;
-
-        // Save the product to the database
-        const savedProduct = await this.productRepository.save(product);
-        return savedProduct;
+        await this.productRepository.save(existingProduct);
       }
+
+      return existingProduct;
     } catch (error) {
       // Handle any errors that occur during the process
       throw error;
@@ -129,11 +160,51 @@ export class ProductService {
     }
   }
 
-  async update(id: number, updateProductDto: UpdateProductDto) {
+  async update(id: UUID, updateProductDto: UpdateProductDto) {
     try {
-      const payload = plainToClass(Product, updateProductDto);
-      return await this.productRepository.update(id, payload);
+      // Check if the product exists
+      const existingProduct = await this.productRepository.findOne({
+        where: { id },
+        relations: ['purchasePrice', 'suppliers'],
+      });
+      if (!existingProduct) {
+        throw new NotFoundException(`Product with ID ${id} not found`);
+      }
+      const latestPrice =
+        existingProduct.purchasePrice?.[
+          existingProduct.purchasePrice.length - 1
+        ];
+
+      if (
+        Number.parseInt(latestPrice.price as any) !=
+        updateProductDto.purchasePrice
+      ) {
+        // Update the existing product quantity and prices
+        existingProduct.quantity =
+          (Number(existingProduct.quantity) || 0) + updateProductDto.quantity;
+        existingProduct.retailPrice = updateProductDto.retailPrice;
+        existingProduct.wholesalePrice = updateProductDto.wholesalePrice;
+        existingProduct.name = updateProductDto.name;
+
+        // Update the purchasePrice array
+        existingProduct.purchasePrice[
+          existingProduct.purchasePrice.length - 1
+        ].price = updateProductDto.purchasePrice;
+
+        // Save the updated product and the new price entry
+        await this.productRepository.update(id, existingProduct);
+      }
+
+      // Apply the update
+      await this.productRepository.update(id, existingProduct);
+
+      // Optionally, you can reload the entity and return it
+      // const updatedProduct = await this.productRepository.findOne(id);
+      // return updatedProduct;
+
+      return { success: true, message: 'Product updated successfully' };
     } catch (error) {
+      // Handle any errors that occur during the process
       throw error;
     }
   }

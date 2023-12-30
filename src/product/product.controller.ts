@@ -38,7 +38,7 @@ export class ProductController {
 
   @Patch(':id')
   update(@Param('id') id: UUID, @Body() updateProductDto: UpdateProductDto) {
-    return this.productService.update(+id, updateProductDto);
+    return this.productService.createAndUpdate(id, updateProductDto);
   }
 
   @Delete(':id')

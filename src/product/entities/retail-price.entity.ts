@@ -15,7 +15,7 @@ const numericTransformer = {
   to: (value: number) => value,
 };
 @Entity()
-export class ProductPrice {
+export class RetailPrice {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -25,7 +25,7 @@ export class ProductPrice {
   @CreateDateColumn({ type: 'timestamp' })
   timestamp: Date;
 
-  @ManyToOne(() => Product, (product) => product.purchasePrice, {
+  @ManyToOne(() => Product, (product) => product.retailPrice, {
     onDelete: 'CASCADE', // Add this line to automatically delete prices when the associated product is deleted
   })
   @JoinColumn({ name: 'product_id' }) // Specify the foreign key column name

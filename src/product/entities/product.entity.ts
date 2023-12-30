@@ -1,15 +1,17 @@
-import { SupplierBill } from 'src/supplier-bill/entities/supplier-bill.entity';
-import { Supplier } from 'src/supplier/entities/supplier.entity';
+// product.entity.ts
+
 import {
   Entity,
   Column,
   PrimaryGeneratedColumn,
   ManyToMany,
   JoinTable,
-  ManyToOne,
-  JoinColumn,
   OneToMany,
 } from 'typeorm';
+import { Exclude } from 'class-transformer';
+import { SupplierBill } from 'src/supplier-bill/entities/supplier-bill.entity';
+import { Supplier } from 'src/supplier/entities/supplier.entity';
+import { ProductPrice } from './product-purchase-price.entity';
 
 @Entity()
 export class Product {
@@ -22,8 +24,9 @@ export class Product {
   @Column({ type: 'numeric' })
   quantity: number;
 
-  @Column({ type: 'numeric' })
-  purchasePrice: number;
+  @OneToMany(() => ProductPrice, (price) => price.product, { cascade: true })
+  @Exclude() // Exclude to avoid circular reference during serialization
+  purchasePrice: ProductPrice[];
 
   @Column({ type: 'numeric' })
   retailPrice: number;

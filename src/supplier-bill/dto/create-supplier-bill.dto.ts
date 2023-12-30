@@ -3,9 +3,7 @@ import {
   ArrayNotEmpty,
   IsString,
   ValidateNested,
-  IsNumber,
   IsOptional,
-  isUUID,
   IsUUID,
 } from 'class-validator';
 import { UUID } from 'crypto';

@@ -6,7 +6,7 @@ import {
 import { CreateProductDto } from './dto/create-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { plainToClass } from 'class-transformer';
 import { UUID } from 'crypto';
 import { Supplier } from 'src/supplier/entities/supplier.entity';
@@ -20,49 +20,36 @@ export class ProductService {
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     @InjectRepository(ProductPrice)
-    private readonly productPriceRepository: Repository<ProductPrice>,
-    private readonly supplierService: SupplierService, // Inject the SupplierService
+    private readonly supplierService: SupplierService,
   ) {}
   async create(createProductDto: CreateProductDto) {
     try {
       // Check if the product with the given ID already exists
       const existingProduct = await this.productRepository.findOne({
         where: { id: createProductDto.id },
-        relations: ['suppliers'], // Specify the name of the relation property
+        relations: ['suppliers', 'purchasePrice'], // Specify the name of the relation property
       });
-      console.log(existingProduct, 'existing product');
 
-      if (false) {
-        // Product with the same ID already exists
+      if (existingProduct && createProductDto.id) {
+        // Product with the given ID exists, update the quantity and create new price
+        const newPrice = new ProductPrice();
+        newPrice.price = createProductDto.purchasePrice;
+        newPrice.timestamp = new Date();
 
-        // Check if prices are different
-        const latestPrice = existingProduct.purchasePrice?.[0]; // Assuming prices are stored in descending order of timestamp
+        // Update the existing product quantity
+        const existingQuantity = Number(existingProduct.quantity);
 
-        if (
-          !latestPrice ||
-          latestPrice.price !== createProductDto.purchasePrice
-        ) {
-          // Prices are different, create a new ProductPrice entry
-          const newPrice = new ProductPrice();
-          newPrice.price = createProductDto.purchasePrice;
-          newPrice.timestamp = new Date();
-          newPrice.product = existingProduct;
+        // Perform the addition
+        existingProduct.quantity = existingQuantity + createProductDto.quantity;
+        // Add the new price entry to the existing purchasePrice array
+        existingProduct.purchasePrice = [
+          newPrice,
+          ...existingProduct.purchasePrice,
+        ];
 
-          // Update the existing product quantity and prices
-          existingProduct.quantity += createProductDto.quantity;
-          existingProduct.purchasePrice = [newPrice]; // Overwrite the purchasePrice array
-
-          // Save the updated product and the new price entry
-          await this.productRepository.save(existingProduct);
-
-          return existingProduct;
-        } else {
-          // Prices are the same, update the quantity only
-          existingProduct.quantity += createProductDto.quantity;
-
-          // Save the updated product
-          return await this.productRepository.save(existingProduct);
-        }
+        // Save the updated product
+        await this.productRepository.save(existingProduct);
+        return existingProduct;
       } else {
         // Product with the given ID doesn't exist, proceed with regular creation
         const product = plainToClass(Product, createProductDto);
@@ -77,23 +64,23 @@ export class ProductService {
             return supplier;
           },
         );
+        const suppliers = await Promise.all(suppliersPromises);
+
         // Create a new ProductPrice entry for the initial purchase
+        // Create a new ProductPrice instance
         const initialPrice = new ProductPrice();
         initialPrice.price = createProductDto.purchasePrice;
         initialPrice.timestamp = new Date();
-        initialPrice.product = product;
-        const suppliers = await Promise.all(suppliersPromises);
+
+        // Set the purchasePrice array
+        product.purchasePrice = [initialPrice];
 
         // Create a new product and associate it with the retrieved suppliers
         product.suppliers = suppliers;
-        product.purchasePrice = [initialPrice];
-
-        console.log(product);
 
         // Save the product to the database
-        // const savedProduct = await this.productRepository.save(product);
-
-        // return savedProduct;
+        const savedProduct = await this.productRepository.save(product);
+        return savedProduct;
       }
     } catch (error) {
       // Handle any errors that occur during the process
@@ -113,7 +100,7 @@ export class ProductService {
     try {
       const product = await this.productRepository.findOne({
         where: { id },
-        relations: ['suppliers'], // Specify the name of the relation property
+        relations: ['suppliers', 'purchasePrice'], // Specify the name of the relation property
       });
 
       if (!product) {

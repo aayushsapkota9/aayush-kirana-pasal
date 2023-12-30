@@ -39,9 +39,9 @@ export class SupplierBillService {
           return await this.productRepository.save(item);
         }
       });
-      const suppliers = await Promise.all(productsPromises);
+      const products = await Promise.all(productsPromises);
 
-      supplierBill.products = suppliers;
+      supplierBill.products = products;
       return await this.supplierBillRepository.save(supplierBill);
     } catch (error) {
       throw error;

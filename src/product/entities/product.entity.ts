@@ -1,5 +1,3 @@
-// product.entity.ts
-
 import {
   Entity,
   Column,
@@ -25,7 +23,6 @@ export class Product {
   quantity: number;
 
   @OneToMany(() => ProductPrice, (price) => price.product, { cascade: true })
-  @Exclude() // Exclude to avoid circular reference during serialization
   purchasePrice: ProductPrice[];
 
   @Column({ type: 'numeric' })
@@ -35,10 +32,8 @@ export class Product {
   wholesalePrice: number;
 
   @ManyToMany(() => Supplier, (supplier) => supplier.products)
-  @JoinTable()
   suppliers: Supplier[];
 
   @ManyToMany(() => Supplier, (supplier) => supplier.products)
-  @JoinTable()
   supplierBill: SupplierBill[];
 }

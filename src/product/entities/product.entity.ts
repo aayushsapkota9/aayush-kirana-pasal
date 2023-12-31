@@ -11,6 +11,7 @@ import { Supplier } from 'src/supplier/entities/supplier.entity';
 import { ProductPrice } from './product-purchase-price.entity';
 import { RetailPrice } from './retail-price.entity';
 import { WholesalePrice } from './wholesale-price.entity';
+import { UUID } from 'crypto';
 
 const numericTransformer = {
   from: (value: string | number) =>
@@ -20,7 +21,7 @@ const numericTransformer = {
 @Entity()
 export class Product {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id: UUID;
 
   @Column()
   name: string;

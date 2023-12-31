@@ -12,36 +12,37 @@ import { SupplierBill } from './entities/supplier-bill.entity';
 import { ProductService } from 'src/product/product.service';
 import { Supplier } from 'src/supplier/entities/supplier.entity';
 import { Product } from 'src/product/entities/product.entity';
+import { CreateProductDto } from 'src/product/dto/create-product.dto';
+import { UpdateProductDto } from 'src/product/dto/update-product.dto';
+import { ProductModule } from 'src/product/product.module';
 
 @Injectable()
 export class SupplierBillService {
   constructor(
     @InjectRepository(SupplierBill)
     private supplierBillRepository: Repository<SupplierBill>,
-    @InjectRepository(Product)
-    private productRepository: Repository<Product>,
+    // private productService: ProductService,
   ) {}
   async create(createSupplierBillDto: CreateSupplierBillDto) {
     try {
       const supplierBill = plainToClass(Supplier, createSupplierBillDto);
-      const productsPromises = supplierBill.products.map(async (item) => {
-        if (item.id) {
-          const product = await this.productRepository.findOne({
-            where: { id: item.id },
-          });
-          if (!product) {
-            throw new BadRequestException(
-              `Supplier with ID ${item.id} not found`,
-            );
-          }
-          return product;
-        } else {
-          return await this.productRepository.save(item);
-        }
-      });
-      const products = await Promise.all(productsPromises);
+      // await Promise.all(
+      //   createSupplierBillDto.products.map(async (item, index) => {
+      //     if (item.id) {
+      //       const product = plainToClass(UpdateProductDto, item);
 
-      supplierBill.products = products;
+      //       const createdProduct = await this.productService.createAndUpdate(
+      //         item.id,
+      //         product,
+      //       );
+      //       supplierBill.products[index] = createdProduct;
+      //     } else {
+      //       const product = plainToClass(CreateProductDto, item);
+      //       const createdProduct = await this.productService.create(product);
+      //       supplierBill.products[index] = createdProduct;
+      //     }
+      //   }),
+      // );
       return await this.supplierBillRepository.save(supplierBill);
     } catch (error) {
       throw error;

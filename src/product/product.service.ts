@@ -69,7 +69,7 @@ export class ProductService {
       throw error;
     }
   }
-  async createAndUpdate(id: string, updateProductDto: UpdateProductDto) {
+  async createAndUpdate(id: UUID, updateProductDto: UpdateProductDto) {
     try {
       // Fetch the existing product
       const existingProduct = await this.productRepository.findOne({
@@ -187,7 +187,7 @@ export class ProductService {
     }
   }
 
-  async findOne(id: string) {
+  async findOne(id: UUID) {
     try {
       const product = await this.productRepository.findOne({
         where: { id },
@@ -262,10 +262,12 @@ export class ProductService {
       existingProduct.purchasePrice[
         existingProduct.purchasePrice.length - 1
       ].price = updateProductDto.purchasePrice;
-      existingProduct.retailPrice[existingProduct.retailPrice.length - 1]
-        .price - updateProductDto.retailPrice;
-      existingProduct.wholesalePrice[existingProduct.wholesalePrice.length - 1]
-        .price - updateProductDto.wholesalePrice;
+      existingProduct.retailPrice[
+        existingProduct.retailPrice.length - 1
+      ].price = updateProductDto.retailPrice;
+      existingProduct.wholesalePrice[
+        existingProduct.wholesalePrice.length - 1
+      ].price = updateProductDto.wholesalePrice;
 
       // Save the updated product
       await this.productRepository.save(existingProduct);
@@ -277,7 +279,7 @@ export class ProductService {
     }
   }
 
-  async remove(id: string) {
+  async remove(id: UUID) {
     try {
       // Find the product with associated suppliers and supplier bills
       const product = await this.productRepository.findOne({

@@ -13,6 +13,8 @@ import { Supplier } from 'src/supplier/entities/supplier.entity';
 import { ProductPrice } from './entities/product-purchase-price.entity';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { SupplierService } from 'src/supplier/supplier.service';
+import { RetailPrice } from './entities/retail-price.entity';
+import { WholesalePrice } from './entities/wholesale-price.entity';
 
 @Injectable()
 export class ProductService {
@@ -24,25 +26,41 @@ export class ProductService {
   async create(createProductDto: CreateProductDto) {
     try {
       const product = plainToClass(Product, createProductDto);
-      const suppliersPromises = createProductDto.suppliers.map(async (item) => {
-        const supplier = await this.supplierService.findOne(item);
-        if (!supplier) {
-          throw new BadRequestException(`Supplier with ID ${item} not found`);
-        }
-        return supplier;
-      });
-      const suppliers = await Promise.all(suppliersPromises);
+      if (createProductDto.suppliers) {
+        const suppliersPromises = createProductDto.suppliers.map(
+          async (item) => {
+            const supplier = await this.supplierService.findOne(item);
+            if (!supplier) {
+              throw new BadRequestException(
+                `Supplier with ID ${item} not found`,
+              );
+            }
+            return supplier;
+          },
+        );
+        const suppliers = await Promise.all(suppliersPromises);
+        product.suppliers = suppliers;
+      }
 
       // Create a new ProductPrice instance
       const initialPrice = new ProductPrice();
       initialPrice.price = createProductDto.purchasePrice;
       initialPrice.timestamp = new Date();
-      // Set the purchasePrice array
       product.purchasePrice = [initialPrice];
 
-      // Create a new product and associate it with the retrieved suppliers
-      product.suppliers = suppliers;
+      //Create a new WholesalePrice instance
+      const initialWholesalePrice = new WholesalePrice();
+      initialWholesalePrice.price = createProductDto.wholesalePrice;
+      initialPrice.timestamp = new Date();
+      product.wholesalePrice = [initialWholesalePrice];
 
+      //Create a new RetailPrice instance
+      const initialRetailPrice = new RetailPrice();
+      initialRetailPrice.price = createProductDto.retailPrice;
+      initialPrice.timestamp = new Date();
+      product.retailPrice = [initialRetailPrice];
+
+      console.log(product);
       // Save the product to the database
       const savedProduct = await this.productRepository.save(product);
       return savedProduct;
@@ -56,59 +74,107 @@ export class ProductService {
       // Fetch the existing product
       const existingProduct = await this.productRepository.findOne({
         where: { id },
-        relations: ['purchasePrice', 'suppliers'],
+        relations: [
+          'purchasePrice',
+          'suppliers',
+          'retailPrice',
+          'wholesalePrice',
+        ],
       });
       if (!existingProduct) {
         throw new BadRequestException(`Product with ID ${id} not found`);
       }
-      const suppliersPromises = createProductDto.suppliers.map(async (item) => {
-        const supplier = await this.supplierService.findOne(item);
-        if (!supplier) {
-          throw new BadRequestException(`Supplier with ID ${item} not found`);
-        }
-        return supplier;
-      });
-      const suppliers = await Promise.all(suppliersPromises);
-      existingProduct.suppliers = suppliers;
 
-      // Check if prices are different
-      const latestPrice =
+      if (createProductDto.suppliers) {
+        const suppliersPromises = createProductDto.suppliers.map(
+          async (item) => {
+            const supplier = await this.supplierService.findOne(item);
+            if (!supplier) {
+              throw new BadRequestException(
+                `Supplier with ID ${item} not found`,
+              );
+            }
+            return supplier;
+          },
+        );
+        const suppliers = await Promise.all(suppliersPromises);
+        // Check if the supplier is not already in the array before adding
+        suppliers.forEach((supplier) => {
+          if (!existingProduct.suppliers.find((s) => s.id === supplier.id)) {
+            existingProduct.suppliers.push(supplier);
+          }
+        });
+      }
+
+      // Check if purchase prices are different
+      const latestPurchasePrice =
         existingProduct.purchasePrice?.[
           existingProduct.purchasePrice.length - 1
         ];
 
       if (
-        Number.parseInt(latestPrice.price as any) !=
-        createProductDto.purchasePrice
+        Number(latestPurchasePrice?.price) !== createProductDto.purchasePrice
       ) {
         // Prices are different, create a new ProductPrice entry
-        const newPrice = new ProductPrice();
-        newPrice.price = Number(createProductDto.purchasePrice);
-        newPrice.timestamp = new Date();
+        const newPurchasePrice = new ProductPrice();
+        newPurchasePrice.price = createProductDto.purchasePrice;
+        newPurchasePrice.timestamp = new Date();
 
         // Update the existing product quantity and prices
-        existingProduct.quantity =
-          (Number(existingProduct.quantity) || 0) + createProductDto.quantity;
+        existingProduct.quantity += Number(createProductDto.quantity) || 0;
 
         // Overwrite the purchasePrice array
         existingProduct.purchasePrice = [
           ...existingProduct.purchasePrice,
-          newPrice,
+          newPurchasePrice,
         ];
 
-        existingProduct.wholesalePrice = createProductDto.wholesalePrice;
-        existingProduct.retailPrice = createProductDto.retailPrice;
         existingProduct.name = createProductDto.name;
+
         // Save the updated product and the new price entry
         await this.productRepository.save(existingProduct);
       } else {
         // Prices are the same, update quantity
-        existingProduct.wholesalePrice = createProductDto.wholesalePrice;
-        existingProduct.retailPrice = createProductDto.retailPrice;
-        existingProduct.quantity =
-          (Number(existingProduct.quantity) || 0) + createProductDto.quantity;
-        // Save the updated product
+        existingProduct.quantity += Number(createProductDto.quantity) || 0;
+      }
 
+      // Check if retail price is different
+      const latestRetailPrice =
+        existingProduct.retailPrice?.[existingProduct.retailPrice.length - 1];
+
+      if (latestRetailPrice?.price !== createProductDto.retailPrice) {
+        const newRetailPrice = new RetailPrice();
+        newRetailPrice.price = Number(createProductDto.retailPrice);
+        newRetailPrice.timestamp = new Date();
+
+        // Overwrite the retailPrice array
+        existingProduct.retailPrice = [
+          ...existingProduct.retailPrice,
+          newRetailPrice,
+        ];
+
+        // Save the updated product
+        await this.productRepository.save(existingProduct);
+      }
+
+      // Check if wholesale price is different
+      const latestWholesalePrice =
+        existingProduct.wholesalePrice?.[
+          existingProduct.wholesalePrice.length - 1
+        ];
+
+      if (latestWholesalePrice?.price !== createProductDto.wholesalePrice) {
+        const newWholesalePrice = new WholesalePrice();
+        newWholesalePrice.price = Number(createProductDto.wholesalePrice);
+        newWholesalePrice.timestamp = new Date();
+
+        // Overwrite the wholesalePrice array
+        existingProduct.wholesalePrice = [
+          ...existingProduct.wholesalePrice,
+          newWholesalePrice,
+        ];
+
+        // Save the updated product
         await this.productRepository.save(existingProduct);
       }
 
@@ -121,7 +187,14 @@ export class ProductService {
 
   async findAll() {
     try {
-      return await this.productRepository.find();
+      return await this.productRepository.find({
+        relations: [
+          'suppliers',
+          'purchasePrice',
+          'retailPrice',
+          'wholesalePrice',
+        ],
+      });
     } catch (error) {
       throw error;
     }
@@ -131,7 +204,12 @@ export class ProductService {
     try {
       const product = await this.productRepository.findOne({
         where: { id },
-        relations: ['suppliers', 'purchasePrice'], // Specify the name of the relation property
+        relations: [
+          'suppliers',
+          'purchasePrice',
+          'retailPrice',
+          'wholesalePrice',
+        ], // Specify the name of the relation property
       });
 
       if (!product) {
@@ -165,42 +243,45 @@ export class ProductService {
       // Check if the product exists
       const existingProduct = await this.productRepository.findOne({
         where: { id },
-        relations: ['purchasePrice', 'suppliers'],
+        relations: [
+          'purchasePrice',
+          'suppliers',
+          'retailPrice',
+          'wholesalePrice',
+        ],
       });
+
       if (!existingProduct) {
         throw new NotFoundException(`Product with ID ${id} not found`);
       }
-      const latestPrice =
-        existingProduct.purchasePrice?.[
-          existingProduct.purchasePrice.length - 1
-        ];
-
-      if (
-        Number.parseInt(latestPrice.price as any) !=
-        updateProductDto.purchasePrice
-      ) {
-        // Update the existing product quantity and prices
-        existingProduct.quantity =
-          (Number(existingProduct.quantity) || 0) + updateProductDto.quantity;
-        existingProduct.retailPrice = updateProductDto.retailPrice;
-        existingProduct.wholesalePrice = updateProductDto.wholesalePrice;
-        existingProduct.name = updateProductDto.name;
-
-        // Update the purchasePrice array
-        existingProduct.purchasePrice[
-          existingProduct.purchasePrice.length - 1
-        ].price = updateProductDto.purchasePrice;
-
-        // Save the updated product and the new price entry
-        await this.productRepository.update(id, existingProduct);
+      if (updateProductDto.suppliers) {
+        const suppliersPromises = updateProductDto.suppliers.map(
+          async (item) => {
+            const supplier = await this.supplierService.findOne(item);
+            if (!supplier) {
+              throw new BadRequestException(
+                `Supplier with ID ${item} not found`,
+              );
+            }
+            return supplier;
+          },
+        );
+        const suppliers = await Promise.all(suppliersPromises);
+        existingProduct.suppliers = suppliers;
       }
+      existingProduct.name = updateProductDto.name;
+      existingProduct.quantity = updateProductDto.quantity;
+      existingProduct.subQuantity = updateProductDto.subQuantity;
+      existingProduct.purchasePrice[
+        existingProduct.purchasePrice.length - 1
+      ].price = updateProductDto.purchasePrice;
+      existingProduct.retailPrice[existingProduct.retailPrice.length - 1]
+        .price - updateProductDto.retailPrice;
+      existingProduct.wholesalePrice[existingProduct.wholesalePrice.length - 1]
+        .price - updateProductDto.wholesalePrice;
 
-      // Apply the update
-      await this.productRepository.update(id, existingProduct);
-
-      // Optionally, you can reload the entity and return it
-      // const updatedProduct = await this.productRepository.findOne(id);
-      // return updatedProduct;
+      // Save the updated product
+      await this.productRepository.save(existingProduct);
 
       return { success: true, message: 'Product updated successfully' };
     } catch (error) {
@@ -209,9 +290,32 @@ export class ProductService {
     }
   }
 
-  async remove(id: UUID) {
+  async remove(id: string) {
     try {
-      return await this.productRepository.delete(id);
+      // Find the product with associated suppliers and supplier bills
+      const product = await this.productRepository.findOne({
+        where: { id },
+        relations: ['suppliers'],
+      });
+
+      if (!product) {
+        throw new NotFoundException(`Product with ID ${id} not found`);
+      }
+
+      // Check if the product is associated with any suppliers or supplier bills
+      if (
+        (product.suppliers && product.suppliers.length > 0) ||
+        (product.supplierBill && product.supplierBill.length > 0)
+      ) {
+        throw new BadRequestException(
+          `Product with ID ${id} is associated with suppliers or supplier bills and cannot be deleted`,
+        );
+      }
+
+      // Delete the product since it's not associated with any suppliers or supplier bills
+      await this.productRepository.delete(id);
+
+      return { message: 'Customer deleted.', id };
     } catch (error) {
       throw error;
     }

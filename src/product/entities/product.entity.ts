@@ -28,6 +28,9 @@ export class Product {
   @Column({ type: 'numeric', transformer: numericTransformer })
   quantity: number;
 
+  @Column({ type: 'numeric', transformer: numericTransformer })
+  subQuantity: number;
+
   @OneToMany(() => ProductPrice, (price) => price.product, { cascade: true })
   purchasePrice: ProductPrice[];
 

@@ -32,13 +32,19 @@ export class ProductController {
   }
   @Get('find/:id')
   findBySupplier(@Param('id') id: UUID) {
-    // Modify the findOne method to include a filter for the supplier ID
     return this.productService.findBySupplier(id);
   }
 
+  @Patch('add/:id')
+  createAndUpdate(
+    @Param('id') id: UUID,
+    @Body() updateProductDto: UpdateProductDto,
+  ) {
+    return this.productService.createAndUpdate(id, updateProductDto);
+  }
   @Patch(':id')
   update(@Param('id') id: UUID, @Body() updateProductDto: UpdateProductDto) {
-    return this.productService.createAndUpdate(id, updateProductDto);
+    return this.productService.update(id, updateProductDto);
   }
 
   @Delete(':id')

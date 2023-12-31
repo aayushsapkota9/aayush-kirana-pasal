@@ -6,6 +6,7 @@ import {
   IsNumber,
   IsOptional,
   IsUUID,
+  isNumber,
 } from 'class-validator';
 import { UUID } from 'crypto';
 import { PrimaryGeneratedColumn } from 'typeorm';
@@ -22,6 +23,10 @@ export class CreateProductDto {
   @IsNumber()
   @IsNotEmpty()
   quantity: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  subQuantity: number;
 
   @IsNumber()
   @IsNotEmpty()

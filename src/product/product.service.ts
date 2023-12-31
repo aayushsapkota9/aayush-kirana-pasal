@@ -69,7 +69,7 @@ export class ProductService {
       throw error;
     }
   }
-  async createAndUpdate(id: string, createProductDto: UpdateProductDto) {
+  async createAndUpdate(id: string, updateProductDto: UpdateProductDto) {
     try {
       // Fetch the existing product
       const existingProduct = await this.productRepository.findOne({
@@ -85,25 +85,24 @@ export class ProductService {
         throw new BadRequestException(`Product with ID ${id} not found`);
       }
 
-      if (createProductDto.suppliers) {
-        const suppliersPromises = createProductDto.suppliers.map(
-          async (item) => {
-            const supplier = await this.supplierService.findOne(item);
-            if (!supplier) {
-              throw new BadRequestException(
-                `Supplier with ID ${item} not found`,
-              );
-            }
-            return supplier;
-          },
+      // Update quantity regardless of price changes
+      existingProduct.quantity += updateProductDto.quantity;
+
+      if (updateProductDto.supplier) {
+        const supplier = await this.supplierService.findOne(
+          updateProductDto.supplier,
         );
-        const suppliers = await Promise.all(suppliersPromises);
+
+        if (!supplier) {
+          throw new BadRequestException(
+            `Supplier with ID ${updateProductDto.supplier} not found`,
+          );
+        }
+
         // Check if the supplier is not already in the array before adding
-        suppliers.forEach((supplier) => {
-          if (!existingProduct.suppliers.find((s) => s.id === supplier.id)) {
-            existingProduct.suppliers.push(supplier);
-          }
-        });
+        if (!existingProduct.suppliers.find((s) => s.id === supplier.id)) {
+          existingProduct.suppliers.push(supplier);
+        }
       }
 
       // Check if purchase prices are different
@@ -113,15 +112,12 @@ export class ProductService {
         ];
 
       if (
-        Number(latestPurchasePrice?.price) !== createProductDto.purchasePrice
+        Number(latestPurchasePrice?.price) !== updateProductDto.purchasePrice
       ) {
         // Prices are different, create a new ProductPrice entry
         const newPurchasePrice = new ProductPrice();
-        newPurchasePrice.price = createProductDto.purchasePrice;
+        newPurchasePrice.price = updateProductDto.purchasePrice;
         newPurchasePrice.timestamp = new Date();
-
-        // Update the existing product quantity and prices
-        existingProduct.quantity += Number(createProductDto.quantity) || 0;
 
         // Overwrite the purchasePrice array
         existingProduct.purchasePrice = [
@@ -129,22 +125,16 @@ export class ProductService {
           newPurchasePrice,
         ];
 
-        existingProduct.name = createProductDto.name;
-
-        // Save the updated product and the new price entry
-        await this.productRepository.save(existingProduct);
-      } else {
-        // Prices are the same, update quantity
-        existingProduct.quantity += Number(createProductDto.quantity) || 0;
+        existingProduct.name = updateProductDto.name;
       }
 
       // Check if retail price is different
       const latestRetailPrice =
         existingProduct.retailPrice?.[existingProduct.retailPrice.length - 1];
 
-      if (latestRetailPrice?.price !== createProductDto.retailPrice) {
+      if (latestRetailPrice?.price !== updateProductDto.retailPrice) {
         const newRetailPrice = new RetailPrice();
-        newRetailPrice.price = Number(createProductDto.retailPrice);
+        newRetailPrice.price = Number(updateProductDto.retailPrice);
         newRetailPrice.timestamp = new Date();
 
         // Overwrite the retailPrice array
@@ -152,9 +142,6 @@ export class ProductService {
           ...existingProduct.retailPrice,
           newRetailPrice,
         ];
-
-        // Save the updated product
-        await this.productRepository.save(existingProduct);
       }
 
       // Check if wholesale price is different
@@ -163,9 +150,9 @@ export class ProductService {
           existingProduct.wholesalePrice.length - 1
         ];
 
-      if (latestWholesalePrice?.price !== createProductDto.wholesalePrice) {
+      if (latestWholesalePrice?.price !== updateProductDto.wholesalePrice) {
         const newWholesalePrice = new WholesalePrice();
-        newWholesalePrice.price = Number(createProductDto.wholesalePrice);
+        newWholesalePrice.price = Number(updateProductDto.wholesalePrice);
         newWholesalePrice.timestamp = new Date();
 
         // Overwrite the wholesalePrice array
@@ -173,10 +160,10 @@ export class ProductService {
           ...existingProduct.wholesalePrice,
           newWholesalePrice,
         ];
-
-        // Save the updated product
-        await this.productRepository.save(existingProduct);
       }
+
+      // Save the updated product
+      await this.productRepository.save(existingProduct);
 
       return existingProduct;
     } catch (error) {

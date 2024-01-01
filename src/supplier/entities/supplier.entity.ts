@@ -24,7 +24,7 @@ export class Supplier {
   phone: string;
 
   // One supplier can have many bills
-  @OneToMany(() => SupplierBill, (supplierBill) => supplierBill.supplierId)
+  @OneToMany(() => SupplierBill, (supplierBill) => supplierBill.supplier)
   bills: SupplierBill[];
 
   // One supplier can have many products

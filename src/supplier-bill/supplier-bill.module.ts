@@ -7,7 +7,7 @@ import { ProductService } from 'src/product/product.service';
 import { ProductModule } from 'src/product/product.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([SupplierBill])],
+  imports: [TypeOrmModule.forFeature([SupplierBill]), ProductModule],
   controllers: [SupplierBillController],
   providers: [SupplierBillService], // Assuming ProductService is provided in this module
 })

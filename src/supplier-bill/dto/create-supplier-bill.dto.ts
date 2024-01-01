@@ -18,7 +18,7 @@ export class CreateSupplierBillDto {
 
   @IsString()
   @IsUUID()
-  supplierId: UUID;
+  supplier: UUID;
 
   @IsArray()
   @ArrayNotEmpty()

@@ -14,6 +14,7 @@ import { CreateSupplierBillDto } from './dto/create-supplier-bill.dto';
 import { UpdateSupplierBillDto } from './dto/update-supplier-bill.dto';
 import { SuccessMessage } from 'src/interfaces/common.interface';
 import { ResponseMessage } from 'src/decorators/response.decorators';
+import { UUID } from 'crypto';
 
 @Controller('supplier-bill')
 export class SupplierBillController {
@@ -34,17 +35,17 @@ export class SupplierBillController {
 
   @Get(':id')
   @ResponseMessage(SuccessMessage.FETCH, 'SupplierBill')
-  findOne(@Param('id') id: number) {
+  findOne(@Param('id') id: UUID) {
     return this.supplierBillService.findOne(id);
   }
 
   @Patch(':id')
   @ResponseMessage(SuccessMessage.PATCH, 'SupplierBill')
   update(
-    @Param('id') id: string,
+    @Param('id') id: UUID,
     @Body() updateSupplierBillDto: UpdateSupplierBillDto,
   ) {
-    return this.supplierBillService.update(+id, updateSupplierBillDto);
+    return this.supplierBillService.update(id, updateSupplierBillDto);
   }
 
   @Delete(':id')

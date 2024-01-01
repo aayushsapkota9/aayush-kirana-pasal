@@ -23,8 +23,9 @@ export class SupplierBill {
   @Column()
   billDate: string;
 
-  @Column()
-  supplierId: UUID;
+  @ManyToOne(() => Supplier, (supplier) => supplier.bills)
+  @JoinColumn({ name: 'supplier_id' }) // Specify the foreign key column name
+  supplier: Supplier;
 
   @ManyToMany(() => Product, (product) => product.supplierBill)
   @JoinTable()

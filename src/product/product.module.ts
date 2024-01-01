@@ -21,5 +21,6 @@ import { RetailPrice } from './entities/retail-price.entity';
   ],
   controllers: [ProductController],
   providers: [ProductService, SupplierService],
+  exports: [ProductService],
 })
 export class ProductModule {}

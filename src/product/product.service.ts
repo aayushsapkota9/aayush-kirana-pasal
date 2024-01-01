@@ -6,10 +6,9 @@ import {
 import { CreateProductDto } from './dto/create-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { plainToClass } from 'class-transformer';
 import { UUID } from 'crypto';
-import { Supplier } from 'src/supplier/entities/supplier.entity';
 import { ProductPrice } from './entities/product-purchase-price.entity';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { SupplierService } from 'src/supplier/supplier.service';
@@ -60,7 +59,6 @@ export class ProductService {
       initialPrice.timestamp = new Date();
       product.retailPrice = [initialRetailPrice];
 
-      console.log(product);
       // Save the product to the database
       const savedProduct = await this.productRepository.save(product);
       return savedProduct;

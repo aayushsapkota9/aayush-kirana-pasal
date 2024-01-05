@@ -7,7 +7,6 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-import { CreateProductDto } from 'src/product/dto/create-product.dto';
 import { CreateSupplierBillDto } from 'src/supplier-bill/dto/create-supplier-bill.dto';
 
 export class CreateSupplierDto {

@@ -2,11 +2,9 @@ import {
   IsString,
   IsNotEmpty,
   IsArray,
-  ArrayNotEmpty,
   IsNumber,
   IsOptional,
   IsUUID,
-  isNumber,
 } from 'class-validator';
 import { UUID } from 'crypto';
 import { PrimaryGeneratedColumn } from 'typeorm';

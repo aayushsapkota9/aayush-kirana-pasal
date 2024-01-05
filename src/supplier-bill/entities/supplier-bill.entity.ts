@@ -2,7 +2,6 @@ import {
   Entity,
   Column,
   PrimaryGeneratedColumn,
-  OneToMany,
   ManyToOne,
   JoinColumn,
   ManyToMany,
@@ -10,7 +9,6 @@ import {
 } from 'typeorm';
 import { Product } from 'src/product/entities/product.entity';
 import { Supplier } from 'src/supplier/entities/supplier.entity';
-import { UUID } from 'crypto';
 
 @Entity()
 export class SupplierBill {

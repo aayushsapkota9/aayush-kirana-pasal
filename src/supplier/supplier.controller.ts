@@ -8,7 +8,6 @@ import {
   Delete,
   UsePipes,
   ValidationPipe,
-  ParseIntPipe,
   HttpStatus,
   ParseUUIDPipe,
 } from '@nestjs/common';

@@ -3,7 +3,6 @@ import {
   Column,
   PrimaryGeneratedColumn,
   ManyToMany,
-  JoinTable,
   OneToMany,
 } from 'typeorm';
 import { SupplierBill } from 'src/supplier-bill/entities/supplier-bill.entity';

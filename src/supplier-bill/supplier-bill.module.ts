@@ -3,7 +3,6 @@ import { SupplierBillService } from './supplier-bill.service';
 import { SupplierBillController } from './supplier-bill.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SupplierBill } from './entities/supplier-bill.entity';
-import { ProductService } from 'src/product/product.service';
 import { ProductModule } from 'src/product/product.module';
 
 @Module({

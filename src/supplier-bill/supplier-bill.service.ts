@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateSupplierBillDto } from './dto/create-supplier-bill.dto';
 import { UpdateSupplierBillDto } from './dto/update-supplier-bill.dto';
 import { Repository } from 'typeorm';
@@ -60,7 +56,7 @@ export class SupplierBillService {
   async findOne(id: UUID): Promise<SupplierBill> {
     try {
       const supplier = await this.supplierBillRepository.findOne({
-        // where: { id },
+        where: { id },
       });
       if (!supplier) {
         throw new NotFoundException('Supplier Bill not found.');

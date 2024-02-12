@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, ValidationPipe } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -8,7 +8,9 @@ import { CustomerModule } from './customer/customer.module';
 import { SupplierBillModule } from './supplier-bill/supplier-bill.module';
 // import { CustomerBillModule } from './customer-bill/customer-bill.module';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
     SupplierModule,
     CustomerModule,
     SupplierBillModule,
+    UserModule,
+    AuthModule,
     // CustomerBillModule,
   ],
   controllers: [AppController],
@@ -35,6 +39,10 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
     {
       provide: APP_INTERCEPTOR,
       useClass: TransformInterceptor,
+    },
+    {
+      provide: APP_PIPE,
+      useClass: ValidationPipe,
     },
   ],
 })

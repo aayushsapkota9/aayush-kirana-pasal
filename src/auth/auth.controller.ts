@@ -5,8 +5,6 @@ import {
   Post,
   Body,
   UseGuards,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { AuthService } from './auth.service';
@@ -43,7 +41,7 @@ export class AuthController {
   @Roles(Role.User)
   @Get('/user')
   getProfile(@Request() req) {
-    return 'this fn returns users';
+    return req;
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

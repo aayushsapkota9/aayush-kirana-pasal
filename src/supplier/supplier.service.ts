@@ -6,6 +6,8 @@ import { Supplier } from './entities/supplier.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToClass } from 'class-transformer';
 import { UUID } from 'crypto';
+import { PaginationDto } from 'src/helpers/pagination.dto';
+import { paginateResponse } from 'src/helpers/pagination';
 
 @Injectable()
 export class SupplierService {
@@ -23,9 +25,19 @@ export class SupplierService {
     }
   }
 
-  async findAll() {
+  async findAll(query: PaginationDto) {
+    const skip = (query.page - 1) * query.limit;
+
     try {
-      return await this.supplierRepository.find();
+      const { sortBy, sortOrder } = query;
+
+      const [data, total] = await this.supplierRepository.findAndCount({
+        take: query.limit,
+        skip,
+        order: sortBy ? { [sortBy]: sortOrder || 'ASC' } : undefined,
+      });
+
+      return { data, total };
     } catch (error) {
       throw error;
     }
